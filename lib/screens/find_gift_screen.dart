@@ -568,12 +568,19 @@ class _FindGiftScreenState extends State<FindGiftScreen> {
         await _playCollectionAnimation(node);
       }
 
+      // 标记礼物为已收集
       GiftService().markGiftAsCollected(gift);
       
+      // 显示成功消息
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('恭喜！你找到了${gift.name}！')),
+        SnackBar(
+          content: Text('恭喜！你找到了${gift.name}！'),
+          backgroundColor: Colors.green,
+          duration: const Duration(seconds: 2),
+        ),
       );
       
+      // 移除所有节点
       _removeAllNodes();
       
       // 自动切换到下一个未收集的礼物
@@ -583,26 +590,35 @@ class _FindGiftScreenState extends State<FindGiftScreen> {
 
   Future<void> _playCollectionAnimation(ARNode node) async {
     // 缩放动画
-    const duration = Duration(milliseconds: 500);
-    const curves = Curves.easeInOut;
+    const duration = Duration(milliseconds: 800);
     
     // 开始缩放动画
     final startScale = node.scale;
     final endScale = vmath.Vector3(0, 0, 0);
     
-    for (double t = 0; t <= 1.0; t += 0.1) {
+    // 使用更多的步骤使动画更平滑
+    for (double t = 0; t <= 1.0; t += 0.05) {
       if (!mounted) break;
       
+      // 使用缓动函数使动画更自然
+      final easedT = Curves.easeInOut.transform(t);
+      
+      // 计算当前缩放
       final scale = vmath.Vector3(
-        startScale.x * (1 - t) + endScale.x * t,
-        startScale.y * (1 - t) + endScale.y * t,
-        startScale.z * (1 - t) + endScale.z * t,
+        startScale.x * (1 - easedT) + endScale.x * easedT,
+        startScale.y * (1 - easedT) + endScale.y * easedT,
+        startScale.z * (1 - easedT) + endScale.z * easedT,
       );
       
+      // 应用变换
       node.scale = scale;
       
-      await Future.delayed(const Duration(milliseconds: 50));
+      // 等待一小段时间
+      await Future.delayed(const Duration(milliseconds: 30));
     }
+    
+    // 确保最终状态
+    node.scale = endScale;
   }
 
   void _switchToNextUncollectedGift() {
